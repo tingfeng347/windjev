@@ -6,7 +6,7 @@ readme = "README.md"
 license = "Apache-2.0"
 license-files = ["LICENSE"]
 authors = [
-    { name = "qiaojingbo", email = "3152912378@qq.com" }
+    { name = "tingfeng347", email = "3152912378@qq.com" }
 ]
 requires-python = ">=3.11"
 dependencies = [
