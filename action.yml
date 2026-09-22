@@ -1,0 +1,45 @@
+name: WindJev Issue Triage
+description: Triage a GitHub Issue with confidence-aware TypeSafe Jev decisions
+
+inputs:
+  issue-number:
+    description: GitHub Issue number to triage
+    required: true
+  config:
+    description: Path to the WindJev profile
+    required: false
+    default: .windjev.yml
+
+runs:
+  using: composite
+  steps:
+    - name: Set up Python
+      uses: actions/setup-python@v5
+      with:
+        python-version: "3.11"
+    - name: Install WindJev
+      shell: bash
+      run: python -m pip install "$GITHUB_ACTION_PATH"
+    - name: Triage issue
+      shell: bash
+      env:
+        WINDJEV_CONFIG: ${{ inputs.config }}
+        WINDJEV_ISSUE_NUMBER: ${{ inputs.issue-number }}
+      run: |
+        set +e
+        result="$(windjev triage \
+          --config "$WINDJEV_CONFIG" \
+          --repository "$GITHUB_REPOSITORY" \
+          --issue-number "$WINDJEV_ISSUE_NUMBER" \
+          --json 2>&1)"
+        status=$?
+        set -e
+
+        printf '%s\n' "$result"
+        {
+          printf '%s\n' '## WindJev Issue Triage'
+          printf '%s\n' '```json'
+          printf '%s\n' "$result"
+          printf '%s\n' '```'
+        } >> "$GITHUB_STEP_SUMMARY"
+        exit "$status"
