@@ -27,6 +27,14 @@ def test_project_is_licensed_under_apache_2() -> None:
     assert "Version 2.0, January 2004" in license_text
 
 
+def test_readme_defaults_to_chinese_and_links_both_languages() -> None:
+    chinese = (ROOT / "README.md").read_text(encoding="utf-8")
+    english = (ROOT / "README_EN.md").read_text(encoding="utf-8")
+
+    assert "简体中文 | [English](README_EN.md)" in chinese
+    assert "[简体中文](README.md) | English" in english
+
+
 def test_ci_and_protected_release_workflows_are_present() -> None:
     ci = (ROOT / ".github" / "workflows" / "ci.yml").read_text(encoding="utf-8")
     release = (ROOT / ".github" / "workflows" / "release.yml").read_text(

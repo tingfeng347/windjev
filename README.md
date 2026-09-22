@@ -1,52 +1,54 @@
 # WindJev
 
-WindJev is a confidence-aware decision foundation for developer workflows. Its MVP triages GitHub Issues with TypeSafe Jev and exposes the same behavior through a Python interface, a CLI, and a GitHub Action.
+简体中文 | [English](README_EN.md)
 
-The MVP is intentionally narrow: it proves the foundation through Issue Triage without prematurely building a workflow DSL, plugin system, hosted service, or generic connector framework.
+WindJev 是一个面向开发者工作流、具备置信度感知能力的决策基座。它的 MVP 使用 TypeSafe Jev 对 GitHub Issue 进行分流，并通过 Python 接口、CLI 和 GitHub Action 提供一致的行为。
 
-## What it decides
+MVP 刻意保持精简：先通过 Issue 分流验证基础能力，不提前引入工作流 DSL、插件系统、托管服务或通用连接器框架。
 
-Each Issue produces four typed judgments:
+## 判断内容
 
-- `type`: `bug`, `feature`, `question`, or `maintenance`
-- `area`: a repository-defined product or code area
-- `priority`: `low`, `medium`, `high`, or `critical`
-- `route`: a repository-defined team
+每个 Issue 会产生四项类型化判断：
 
-Each judgment includes confidence and option probabilities. WindJev derives `needs_review` from field-specific confidence gates and response validity; it does not ask the model whether its own answer should be trusted.
+- `type`：`bug`、`feature`、`question` 或 `maintenance`
+- `area`：由仓库定义的产品或代码领域
+- `priority`：`low`、`medium`、`high` 或 `critical`
+- `route`：由仓库定义的负责团队
 
-## Install
+每项判断都包含置信度和各选项的概率。WindJev 根据各字段的置信度门槛和响应有效性推导 `needs_review`，而不是让模型自行判断它的答案是否可信。
 
-WindJev requires Python 3.11 or later.
+## 安装
+
+WindJev 需要 Python 3.11 或更高版本。
 
 ```bash
 pip install windjev
 export TYPESAFE_API_KEY="..."
 ```
 
-For local development:
+本地开发：
 
 ```bash
 uv sync --dev
 uv run pytest
 ```
 
-## Initialize a repository
+## 初始化仓库
 
 ```bash
 windjev init
 ```
 
-This creates `.windjev.yml` and `.github/workflows/windjev.yml` without overwriting existing files. Edit the generated `areas`, `routes`, and label mappings for the repository, then validate them:
+该命令会创建 `.windjev.yml` 和 `.github/workflows/windjev.yml`，且不会覆盖已有文件。根据仓库情况编辑生成配置中的 `areas`、`routes` 和标签映射，然后进行校验：
 
 ```bash
 windjev config validate
 windjev config validate --json
 ```
 
-New profiles start in `observe` mode with `jev-latest`. Observe Mode produces results but never changes labels.
+新配置默认使用 `observe` 模式和 `jev-latest`。观察模式会生成完整结果，但不会修改标签。
 
-## Run locally
+## 本地运行
 
 ```bash
 windjev triage \
@@ -56,20 +58,20 @@ windjev triage \
   --json
 ```
 
-To triage an existing GitHub Issue, also set `GITHUB_TOKEN`:
+对已有 GitHub Issue 进行分流时，还需要设置 `GITHUB_TOKEN`：
 
 ```bash
 export GITHUB_TOKEN="..."
 windjev triage --repository acme/shop --issue-number 42 --json
 ```
 
-Machine output is one versioned JSON document on stdout. Diagnostics go to stderr. Stable exit codes are `0` for a completed judgment (including human review), `2` for invalid input or configuration, `3` for a provider failure, and `4` for a GitHub failure.
+机器可读输出是在标准输出中生成的一份带版本号的 JSON 文档，诊断信息写入标准错误。稳定退出码分别为：`0` 表示判断完成（包括需要人工复核），`2` 表示输入或配置无效，`3` 表示 Provider 失败，`4` 表示 GitHub 操作失败。
 
 ## GitHub Action
 
-The generated workflow runs when an Issue is opened and supports manual retriage. Add `TYPESAFE_API_KEY` as a repository secret. The workflow checks out only the default branch before reading `.windjev.yml`; Issue content is never executed.
+生成的工作流会在 Issue 创建时运行，并支持手动重新分流。请将 `TYPESAFE_API_KEY` 添加为仓库 Secret。工作流只会检出默认分支，然后读取 `.windjev.yml`；Issue 内容永远不会被执行。
 
-Observe Mode needs:
+观察模式需要以下权限：
 
 ```yaml
 permissions:
@@ -77,13 +79,13 @@ permissions:
   issues: read
 ```
 
-Before switching to Apply Mode, pin an immutable model such as `jev-1.13.0`, evaluate historical Issues, and change `issues: read` to `issues: write`. Apply Mode updates all four managed label dimensions together. If any judgment fails its gate, existing judgment labels remain unchanged and only `needs-human-review` is added.
+切换到应用模式前，请固定一个不可变模型版本，例如 `jev-1.13.0`，使用历史 Issue 完成评估，并将 `issues: read` 改为 `issues: write`。应用模式会一次性更新全部四个受管理的标签维度。如果任一判断未通过门槛，现有判断标签保持不变，只添加 `needs-human-review`。
 
-WindJev never modifies unmanaged labels, assigns people, closes Issues, edits Issue text, or posts generated comments.
+WindJev 不会修改未受管理的标签、分配人员、关闭 Issue、编辑 Issue 内容或发布生成的评论。
 
-## Evaluate before applying
+## 应用前评估
 
-Create `.windjev/eval.yml`:
+创建 `.windjev/eval.yml`：
 
 ```yaml
 version: 1
@@ -97,13 +99,13 @@ cases:
       route: backend
 ```
 
-Then run:
+然后运行：
 
 ```bash
 windjev eval --evaluation .windjev/eval.yml --json
 ```
 
-The report includes per-field accuracy, automatic coverage, automatic error rate, human review rate, provider usage, and timing. Fewer than 30 cases produces a warning. WindJev does not tune gates or enable Apply Mode automatically.
+报告包含各字段准确率、自动处理覆盖率、自动处理错误率、人工复核率、Provider 用量和耗时。少于 30 个用例时会产生警告。WindJev 不会自动调整门槛或启用应用模式。
 
 ## Python
 
@@ -146,16 +148,16 @@ result = triage(
 )
 ```
 
-Async applications use `async_triage`. Batch evaluation uses `async_triage_many`, which limits concurrency, preserves input order, and isolates item failures.
+异步应用使用 `async_triage`。批量评估使用 `async_triage_many`，它会限制并发、保持输入顺序，并隔离单项失败。
 
-## Data boundary
+## 数据边界
 
-WindJev sends only the Issue title and body, repository name and description, and configured judgment criteria to TypeSafe. It does not send comments, attachments, author details, existing labels, repository source, or other Issues. Private Issue content still leaves GitHub and is sent to TypeSafe.
+WindJev 只向 TypeSafe 发送 Issue 标题和正文、仓库名称和描述，以及配置的判断标准。它不会发送评论、附件、作者信息、已有标签、仓库源码或其他 Issue。私有 Issue 的内容仍会离开 GitHub 并发送给 TypeSafe。
 
-WindJev has no hosted service, database, or product telemetry. API keys are read from environment variables or GitHub Secrets and are not written to profiles or results.
+WindJev 没有托管服务、数据库或产品遥测。API Key 从环境变量或 GitHub Secrets 读取，不会写入配置或结果。
 
-## Project documents
+## 项目文档
 
-- [MVP design](docs/mvp-design.md)
-- [Domain language](CONTEXT.md)
-- [Architecture decisions](docs/adr/)
+- [MVP 设计](docs/mvp-design.md)
+- [领域语言](CONTEXT.md)
+- [架构决策](docs/adr/)
